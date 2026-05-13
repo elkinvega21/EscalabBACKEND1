@@ -24,8 +24,21 @@ export const getVoiceDemo = async (req, res) => {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.detail?.message || 'Error from ElevenLabs');
+      let errorBody = '';
+      try {
+        const errorData = await response.json();
+        errorBody = JSON.stringify(errorData);
+        console.error(`[ElevenLabs] Status ${response.status}:`, errorBody);
+        return res.status(500).json({ 
+          error: 'Error desde ElevenLabs', 
+          status: response.status,
+          detail: errorData 
+        });
+      } catch {
+        errorBody = await response.text();
+        console.error(`[ElevenLabs] Status ${response.status} (non-JSON):`, errorBody);
+        return res.status(500).json({ error: 'Error desde ElevenLabs', detail: errorBody });
+      }
     }
 
     const arrayBuffer = await response.arrayBuffer();
@@ -38,7 +51,7 @@ export const getVoiceDemo = async (req, res) => {
     res.send(buffer);
 
   } catch (error) {
-    console.error('Error generating voice:', error);
-    res.status(500).json({ error: 'Error al generar el audio de prueba' });
+    console.error('[Voice Controller] Error inesperado:', error.message);
+    res.status(500).json({ error: 'Error al generar el audio de prueba', detail: error.message });
   }
 };
