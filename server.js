@@ -1,12 +1,13 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import { initDb } from './database.js';
 import chatRoutes from './routes/chatRoutes.js';
 import leadRoutes from './routes/leadRoutes.js';
 import voiceRoutes from './routes/voiceRoutes.js';
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 10000;
 
 // Middlewares
 app.use(cors()); // Permitir peticiones desde el frontend
@@ -22,7 +23,18 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Servidor Backend de Escalab funcionando' });
 });
 
-// Iniciar servidor
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor backend escuchando en el puerto ${PORT}`);
+// Inicializar DB y luego arrancar servidor
+initDb().then(() => {
+  app.listen(PORT, () => {
+    console.log(`🚀 Servidor backend escuchando en el puerto ${PORT}`);
+  });
+});
+
+// Manejo de errores no capturados para evitar caídas del proceso
+process.on('uncaughtException', (err) => {
+  console.error('CRITICAL ERROR (uncaughtException):', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('CRITICAL ERROR (unhandledRejection):', reason);
 });
