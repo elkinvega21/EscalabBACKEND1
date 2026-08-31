@@ -31,11 +31,20 @@ export const initDb = async () => {
           timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
+      
+      // Ensure columns exist if the table was created in an older version
+      try {
+        await client.query(`ALTER TABLE messages ADD COLUMN IF NOT EXISTS session_id VARCHAR(255);`);
+        await client.query(`ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_form BOOLEAN DEFAULT FALSE;`);
+      } catch (alterErr) {
+        console.log('Columnas ya existen o hubo un error al alterar la tabla:', alterErr.message);
+      }
+      
       console.log('📊 Tabla "messages" verificada.');
 
-      // Tabla de leads (Clientes Potenciales)
+      // Tabla de leads (Clientes Potenciales de la Landing)
       await client.query(`
-        CREATE TABLE IF NOT EXISTS leads (
+        CREATE TABLE IF NOT EXISTS landing_leads (
           id SERIAL PRIMARY KEY,
           nombre VARCHAR(255),
           email VARCHAR(255) NOT NULL,
@@ -46,7 +55,18 @@ export const initDb = async () => {
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
-      console.log('📊 Tabla "leads" verificada.');
+      
+      try {
+        await client.query(`ALTER TABLE landing_leads ADD COLUMN IF NOT EXISTS nombre VARCHAR(255);`);
+        await client.query(`ALTER TABLE landing_leads ADD COLUMN IF NOT EXISTS empresa VARCHAR(255);`);
+        await client.query(`ALTER TABLE landing_leads ADD COLUMN IF NOT EXISTS telefono VARCHAR(50);`);
+        await client.query(`ALTER TABLE landing_leads ADD COLUMN IF NOT EXISTS mensaje TEXT;`);
+        await client.query(`ALTER TABLE landing_leads ADD COLUMN IF NOT EXISTS origen VARCHAR(50) DEFAULT 'formulario';`);
+      } catch (alterErr) {
+        console.log('Columnas ya existen o hubo un error al alterar la tabla landing_leads:', alterErr.message);
+      }
+      
+      console.log('📊 Tabla "landing_leads" verificada.');
 
     } finally {
       client.release();

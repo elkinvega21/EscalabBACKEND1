@@ -25,8 +25,8 @@ app.get('/api/health', (req, res) => {
 
 // Inicializar DB y luego arrancar servidor
 initDb().then(() => {
-  app.listen(PORT, () => {
-    console.log(`🚀 Servidor backend escuchando en el puerto ${PORT}`);
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Servidor backend escuchando en http://0.0.0.0:${PORT}`);
   });
 });
 
